@@ -1,0 +1,444 @@
+import re, random, sys
+
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+from PyQt5.QtCore import Qt
+
+from PyQt5.QtWidgets import (
+
+    QApplication,
+
+    QWidget,
+
+    QPushButton,
+
+    QRadioButton,
+
+    QHBoxLayout,
+
+    QVBoxLayout,
+
+    QLabel,
+
+    QLineEdit,
+
+    QMainWindow,
+
+    QDesktopWidget
+
+)
+
+from PyQt5.QtGui import QFont
+
+import requests
+
+import donottouch as dt
+
+
+
+class Window(QMainWindow):
+
+    def __init__(self):
+
+        ######################################
+
+        #Basic Set Up Code - DO NOT TOUCH
+
+        super().__init__()
+
+        frame = self.frameGeometry()
+
+        center = QDesktopWidget().availableGeometry().center()
+
+        frame.moveCenter(center)
+
+        self.setFixedWidth(500)
+
+        self.setFixedHeight(500)
+
+        self.move(frame.topLeft())
+
+        self.centralwidget = QWidget(self)
+
+        self.setCentralWidget(self.centralwidget)
+
+        self.board = dt.Board()
+
+        self.board.setHidden(True)
+
+        self.board.setFixedWidth(500)
+
+        self.leftpane = dt.LeftPane()
+
+        self.leftpane.addItems(self.board.WORDLIST)
+
+        self.leftpane.setHidden(True)
+
+        #self.valid_word_box.setHidden(True)
+
+                                                                
+
+        ######################################
+
+        #Insert Code Below
+
+        # Work with Label 1
+
+        # Window Title
+
+        self.setWindowTitle("Wordle 2 Electric Boogaloo")
+
+        self.points = 0
+
+        # Welcome Label
+
+        self.start_label1 = QLabel("WELCOME")
+
+        self.start_label1.setFont(QFont('‘Cambria’', 20))
+
+        self.start_label1.setAlignment(QtCore.Qt.AlignCenter)
+
+        # To Label
+
+        self.start_label2 = QLabel("TO")
+
+        self.start_label2.setFont(QFont('‘Cambria’', 20))
+
+        self.start_label2.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Wordle 2 Label
+
+        self.start_label3 = QLabel("WORDLE 2")
+
+        self.start_label3.setFont(QFont('‘Cambria’', 20))
+
+        self.start_label3.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Total Points Label
+
+        self.points_label = QLabel(f"Total Points: {self.points}")
+
+        self.points_label.setFont(QFont('‘Cambria’', 16))
+
+        self.points_label.setHidden(True)
+
+        self.points_label.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.points_label.resize(400,100)
+
+        # Check Word Label
+
+        self.valid_word_label = QLabel("Check Word:")
+
+        self.valid_word_label.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.valid_word_label.setFont(QFont('‘Cambria’', 16))
+
+        self.valid_word_label.setHidden(True)
+
+        self.valid_word_label.resize(150,100)
+
+        # Start Button
+
+        self.start_button = QPushButton("Start")
+
+        self.start_button.resize(200,100)
+
+        self.start_button.setFont(QFont('Cambria', 24))
+
+        self.start_button.clicked.connect(self.startGame)
+
+        # Reset Button
+
+        self.reset_button = QPushButton("Reset")
+
+        self.reset_button.setHidden(True)
+
+        self.reset_button.setFont(QFont('Cambria', 16))
+
+        self.reset_button.resize(100,50)
+
+        self.reset_button.clicked.connect(self.resetGame)
+
+        # Hint Button
+
+        self.hint_button = QPushButton("Hint")
+
+        self.hint_button.setHidden(True)
+
+        self.hint_button.setFont(QFont('Cambria', 16))
+
+        self.hint_button.resize(100,50)
+
+        self.hint_button.setEnabled(False)
+
+        self.hint_button.clicked.connect(self.resetGame)
+
+
+
+        # Easy Mode button
+
+        self.easy_mode_button = QRadioButton("Easy Mode")
+
+        self.easy_mode_button.setFont(QFont('Cambria', 10))
+
+        self.easy_mode_button.setFixedWidth(200)
+
+
+
+        # Line Edit Object
+
+        self.valid_word_box = QLineEdit("Enter Word", self)
+
+        self.valid_word_box.textChanged.connect(self.validWord)
+
+        self.valid_word_box.setHidden(True)
+
+        #Lay out
+
+
+
+        self.vbox_start = QVBoxLayout()
+
+        self.vbox_start.addWidget(self.start_label1)
+
+        self.vbox_start.addWidget(self.start_label2)
+
+        self.vbox_start.addWidget(self.start_label3)
+
+        self.vbox_start.addWidget(self.start_button)
+
+        self.vbox_start.addWidget(self.easy_mode_button)
+
+
+
+        self.hbox_buttons = QHBoxLayout()
+
+        self.hbox_buttons.addWidget(self.reset_button)
+
+        self.hbox_buttons.addWidget(self.hint_button)
+
+
+
+        self.hbox_valid_word = QHBoxLayout()
+
+        self.hbox_valid_word.addWidget(self.valid_word_label)
+
+        self.hbox_valid_word.addWidget(self.valid_word_box)
+
+
+
+        self.vbox_game = QVBoxLayout()
+
+        self.vbox_game.addWidget(self.points_label)
+
+        self.vbox_game.addLayout(self.hbox_buttons)
+
+        self.vbox_game.addLayout(self.hbox_valid_word)
+
+
+
+        self.hbox_main = QHBoxLayout(self.centralwidget)
+
+        self.hbox_main.addLayout(self.vbox_start)
+
+        self.hbox_main.addWidget(self.leftpane)
+
+        self.hbox_main.addWidget(self.board)
+
+        self.hbox_main.addLayout(self.vbox_game)
+
+        #seoflhbox_buttons
+
+        # hbox = QHBoxLayout()
+
+        # hbox.addWidget(self.start_label1)
+
+        # hbox.addWidget(self.start_label2)
+
+        # hbox.addWidget(self.start_label3)
+
+        # hbox.addWidget(self.valid_word_label)
+
+        # hbox.addWidget(self.points_label)
+
+        # hbox.addWidget(self.start_button)
+
+        # hbox.addWidget(self.reset_button)
+
+        # hbox.addWidget(self.hint_button)
+
+        # hbox.addWidget(self.easy_mode_button)
+
+        # hbox.addWidget(self.valid_word_label)
+
+        # self.centralwidget.setLayout(hbox)
+
+
+
+
+
+    def startGame(self):
+
+        ######################################
+
+        #Basic Set Up Code - DO NOT TOUCH
+
+        self.setFixedWidth(1000)
+
+        ######################################
+
+        self.start_button.setHidden(True)
+
+        self.start_label1.setHidden(True)
+
+        self.start_label2.setHidden(True)
+
+        self.start_label3.setHidden(True)
+
+        self.easy_mode_button.setHidden(True)
+
+
+
+        self.board.setHidden(False)
+
+        self.reset_button.setHidden(False)
+
+        self.hint_button.setHidden(False)
+
+        self.points_label.setHidden(False)
+
+        self.valid_word_label.setHidden(False)
+
+        self.valid_word_box.setHidden(False)
+
+
+
+        if self.easy_mode_button.isChecked() == True:
+
+            self.easy_mode_button.setEnabled(True)
+
+            self.hint_button.setEnabled(True)
+
+
+
+
+
+
+
+
+
+    def resetGame(self):
+
+        ######################################
+
+        #Basic Set Up Code - DO NOT TOUCH
+
+        self.board.reset()
+
+        self.setFixedWidth(500)
+
+        ######################################
+
+        #Insert Code Below
+
+        self.board.setHidden(True)
+
+        self.reset_button.setHidden(True)
+
+        self.hint_button.setHidden(True)
+
+        self.leftpane.setHidden(True)
+
+        self.points_label.setHidden(True)
+
+        self.valid_word_label.setHidden(True)
+
+        self.valid_word_box.setHidden(True)
+
+
+
+        self.start_button.setHidden(True)
+
+        self.start_label1.setHidden(True)
+
+        self.start_label2.setHidden(True)
+
+        self.start_label3.setHidden(True)
+
+        self.easy_mode_button.setHidden(True)
+
+
+
+        self.valid_word_label = QLabel("Check Word:")
+
+        self.valid_word_box = QLabel("Enter Word")
+
+        self.hint_button.isChecked(False)
+
+        self.points = 0
+
+        self.points_label = QLabel(f"Total Points: {self.points}")
+
+        self.hint_button.setEnabled(False)
+
+    def toggleHint(self):
+
+        #Insert code here
+
+        if self.leftpane.isHidden():
+
+            self.leftpane.setHidden(False)
+
+        else:
+
+            self.leftpane.setHidden(True)
+
+
+
+
+
+
+
+    def addPoints(self):
+
+        #Insert code here
+
+        self.points += 1
+
+        self.points_label = QLabel(f"Total Points: {self.points}")
+
+
+
+    def validWord(self):
+
+        c = 3
+
+        #Insert code here
+
+        if len(self.valid_word_box.text()) >= 5:
+
+            self.valid_word_label.setText("Valid word!")
+
+        else:
+
+            self.valid_word_label.setText("Not valid word!")
+
+
+
+
+
+if __name__ == '__main__':
+
+    app = QApplication([])
+
+    app.setStyle('Fusion')
+
+    window = Window()
+
+    window.show()
+
+    window.setFixedSize(window.size())
+
+    sys.exit(app.exec_())
+
