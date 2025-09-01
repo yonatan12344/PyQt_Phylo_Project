@@ -7,3 +7,4 @@ w.show()
 return_code = app.exec_()
 sys.exit(return_code)
 
+print("Hi")
